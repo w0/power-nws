@@ -11,6 +11,7 @@ function Get-AlertsActive {
         [string[]]
         $MessageType,
 
+        [Parameter(AttributeValues)]
         [string[]]
         $EventName,
 
