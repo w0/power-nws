@@ -6,67 +6,78 @@ function Get-AlertsActive {
         [String[]]
         $Status,
 
-        [Parameter(AttributeValues)]
+        [Parameter()]
         [ValidateSet('Alert', 'Update', 'Cancel')]
         [string[]]
         $MessageType,
 
-        [Parameter(AttributeValues)]
+        [Parameter()]
         [string[]]
         $EventName,
 
-        [Parameter(AttributeValues)]
-        [ParameterType]
+        [Parameter()]
+        [String[]]
         $EventCode,
 
-        [Parameter(AttributeValues)]
+        [Parameter()]
         [ValidateSet('Land', 'Marine')]
-        [ParameterType]
+        [String]
         $RegionType,
         
-        [Parameter(AttributeValues)]
-        [ParameterType]
+        [Parameter()]
+        [String]
         $Point,
         
-        [Parameter(AttributeValues)]
-        [ParameterType]
+        [Parameter()]
         [ValidateSet('AL','AT','GL','GM','PA','PI')]
+        [String[]]
         $Region,
         
-        [Parameter(AttributeValues)]
-        [ParameterType]
+        [Parameter()]
+        [String[]]
         $Area,
         
-        [Parameter(AttributeValues)]
-        [ParameterType]
+        [Parameter()]
+        [string[]]
         $Zone,
         
-        [Parameter(AttributeValues)]
+        [Parameter()]
         [ValidateSet('Immediate', 'Expected', 'Future', 'Past', 'Unknown')]
-        [ParameterType]
+        [string[]]
         $Urgency,
         
-        [Parameter(AttributeValues)]
+        [Parameter()]
         [ValidateSet('Extreme', 'Severe', 'Moderate', 'Minor', 'Unknown')]
-        [ParameterType]
+        [string[]]
         $Severity,
         
-        [Parameter(AttributeValues)]
+        [Parameter()]
         [ValidateSet('Unknown', 'Unlikely', 'Possible', 'Likely', 'Observed')]
-        [ParameterType]
+        [string[]]
         $Certainty,
         
-        [Parameter(AttributeValues)]
-        [ParameterType]
+        [Parameter()]
+        [int]
         $Limit
     )
-    
+
     begin {
-        
+        $active = 'https://api.weather.gov/alerts/active'
     }
     
     process {
+        $r = Invoke-WebRequest $active
+
+        $Content = [System.Text.Encoding]::Utf8.GetString($r.Content) | ConvertFrom-Json
+
+        $Makeitpretty = [PSCustomObject]@{
+            UpdateTime = $Content.updated
+            Alerts     = $Content.features | ForEach-Object {
+                Write-Output $_.properties
+            }
+        }
         
+        Write-Output $Makeitpretty
     }
     
     end {
