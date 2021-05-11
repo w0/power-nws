@@ -62,22 +62,34 @@ function Get-AlertsActive {
     )
 
     begin {
-        $active = 'https://api.weather.gov/alerts/active'
+        $uriRequest = [System.UriBuilder]'https://api.weather.gov/alerts/active'
     }
     
     process {
-        $r = Invoke-WebRequest $active
 
-        $Content = [System.Text.Encoding]::Utf8.GetString($r.Content) | ConvertFrom-Json
+        $Obj = [System.Web.HttpUtility]::ParseQueryString([String]::Empty)
 
-        $Makeitpretty = [PSCustomObject]@{
-            UpdateTime = $Content.updated
-            Alerts     = $Content.features | ForEach-Object {
-                Write-Output $_.properties
-            }
+        $PSBoundParameters.GetEnumerator() | % {
+            $Obj.add("$($_.key)","$($_.value)")
         }
         
-        Write-Output $Makeitpretty
+        $uriRequest.Query = $Obj.ToString()
+ 
+        $r = Invoke-WebRequest -uri $uriRequest.Uri.ToString().ToLower()
+
+        if ($r.StatusCode -eq 200) {
+            $Content = [System.Text.Encoding]::Utf8.GetString($r.Content) | ConvertFrom-Json
+
+            $Makeitpretty = [PSCustomObject]@{
+                UpdateTime = $Content.updated
+                Alerts     = $Content.features | ForEach-Object {
+                    Write-Output $_.properties
+                }
+            }
+            Write-Output $Makeitpretty
+        } else {
+            Throw 'Bad query built'
+        }
     }
     
     end {
